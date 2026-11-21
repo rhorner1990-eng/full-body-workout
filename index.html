@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#172b3a">
+<title>Full Body Workout Tracker</title>
+<style>
+:root{--bg:#f2f5f7;--card:#fff;--ink:#172b3a;--muted:#667784;--line:#dce4e9;--accent:#1d6b58;--soft:#e8f2ee}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{background:var(--ink);color:#fff;padding:22px 18px 18px;position:sticky;top:0;z-index:2}
+header h1{font-size:21px;margin:0 0 4px}header p{margin:0;color:#d4e0e7;font-size:13px}
+main{max-width:720px;margin:auto;padding:16px 14px 40px}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:4px 0 14px}
+button{font:inherit;cursor:pointer;border:0;border-radius:12px;padding:11px 12px}
+.tab{background:#e2e9ed;color:var(--ink);font-weight:700}.tab.active{background:var(--accent);color:#fff}
+.panel,.exercise,.summary{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:15px;margin:10px 0}
+.panel h2{margin:0 0 4px;font-size:19px}.sub{color:var(--muted);font-size:13px;margin:0 0 12px}
+.exercise h3{font-size:16px;margin:0 0 4px}.target{font-size:13px;color:var(--muted);margin-bottom:10px}
+.setrow{display:grid;grid-template-columns:48px 1fr 1fr 42px;gap:7px;align-items:center;margin:7px 0}
+.setrow label{font-size:12px;color:var(--muted)}
+input{width:100%;min-width:0;padding:9px 8px;border:1px solid var(--line);border-radius:9px;font:inherit;font-size:14px;background:#fff;color:var(--ink)}
+input[type=checkbox]{width:22px;height:22px;accent-color:var(--accent);justify-self:center}
+.small{font-size:12px;color:var(--muted)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.primary{background:var(--accent);color:#fff;font-weight:700}.secondary{background:#e5ecef;color:var(--ink)}
+.timer{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.timer strong{font-size:27px;font-variant-numeric:tabular-nums}
+.timer-controls{display:flex;gap:6px}.timer-controls button{padding:8px 10px;background:#e5ecef}
+.progress{height:8px;background:#e5ecef;border-radius:99px;overflow:hidden;margin-top:8px}.bar{height:100%;background:var(--accent);width:0}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:14px}
+.note{background:var(--soft);border-radius:12px;padding:12px;font-size:13px;margin-top:12px}
+@media(min-width:600px){main{padding-top:22px}.exercise{padding:18px}}
+</style>
+
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#172b3a">
+<link rel="icon" href="./icon-192.png">
+<script>if ("serviceWorker" in navigator) { window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {})); }</script>
+</head>
+<body>
+<header><h1>Full Body Workout Tracker</h1><p>3 sessions • Every other day • Aim to finish within 60 minutes</p></header>
+<main>
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-day="0">Day 1</button>
+    <button class="tab" data-day="1">Day 2</button>
+    <button class="tab" data-day="2">Day 3</button>
+  </div>
+  <section class="panel">
+    <h2 id="dayTitle">Day 1 – Strength focus</h2>
+    <p class="sub" id="daySub">Log your weight, tick off each set and save your session on this device.</p>
+    <div class="timer">
+      <div><div class="small">Session timer</div><strong id="clock">00:00</strong></div>
+      <div class="timer-controls"><button id="start">Start</button><button id="pause">Pause</button><button id="reset">Reset</button></div>
+    </div>
+    <div class="progress"><div class="bar" id="progressBar"></div></div>
+    <p class="small" id="progressText">0 of 15 sets completed</p>
+  </section>
+  <div id="workouts"></div>
+  <section class="panel">
+    <h2>Rest timer</h2><p class="sub">Choose a rest period and start the countdown.</p>
+    <div class="timer"><strong id="restClock">01:30</strong><div class="timer-controls">
+      <button data-rest="60">60 sec</button><button data-rest="90">90 sec</button><button data-rest="120">2 min</button><button id="restStart">Go</button><button id="restStop">Stop</button>
+    </div></div>
+  </section>
+  <section class="panel">
+    <h2>Training notes</h2>
+    <textarea id="notes" rows="3" placeholder="How did the session feel? Any notes..." style="width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;font:inherit"></textarea>
+    <div class="actions"><button class="primary" id="save">Save this session</button><button class="secondary" id="clear">Clear current session</button></div>
+    <p class="small" id="savedStatus">Your entries are saved locally on this device when you tap Save.</p>
+  </section>
+  <div class="note"><b>Progression:</b> Build towards the top of each rep range. When you hit the top of the range on every set with good technique, increase the load slightly. Aim to keep 1–2 reps in reserve on most sets.</div>
+  <div class="note"><b>Technique note:</b> Behind-the-neck presses require good shoulder mobility and may irritate the shoulder. Use only if comfortable and controlled; a standard overhead press is a sensible alternative. Stop if you feel pain or pinching.</div>
+  <div class="note"><b>Warm-up:</b> Allow around 5 minutes for a general warm-up and lighter preparation sets. Keep transitions purposeful to stay within 60 minutes.</div>
+</main>
+<footer>Workout data is stored in this browser on this device. Export or back up your notes separately if needed.</footer>
+<script>
+const plans=[
+ {title:"Day 1 – Strength focus",items:[["Barbell squat",3,"6–8"],["Barbell bench press",3,"6–8"],["Wide-grip pull-ups",3,"6–10"],["Behind-the-neck press",2,"8–10"],["Pendlay row",2,"8–10"],["Sit-ups",2,"15–20"]]},
+ {title:"Day 2 – Hypertrophy focus",items:[["Barbell squat",3,"8–10"],["Barbell bench press",3,"8–10"],["Wide-grip pull-ups",3,"8–12"],["Behind-the-neck press",2,"10–12"],["Pendlay row",2,"10–12"],["Sit-ups",2,"20–25"]]},
+ {title:"Day 3 – Mixed strength and volume",items:[["Barbell squat",3,"6–8"],["Barbell bench press",3,"6–8"],["Wide-grip pull-ups",3,"6–10"],["Behind-the-neck press",2,"8–10"],["Pendlay row",2,"8–10"],["Sit-ups",2,"15–20"]]}
+];
+let day=0, sessionSeconds=0, sessionInterval=null, restSeconds=90, restInterval=null;
+const $=id=>document.getElementById(id);
+function key(){return "fbwt-day-"+day}
+function render(){
+ document.querySelectorAll(".tab").forEach((b,i)=>b.classList.toggle("active",i===day));
+ $("dayTitle").textContent=plans[day].title;
+ const saved=JSON.parse(localStorage.getItem(key())||"{}");
+ $("workouts").innerHTML=plans[day].items.map((it,i)=>`<section class="exercise"><h3>${it[0]}</h3><div class="target">${it[1]} sets × ${it[2]} reps</div>${Array.from({length:it[1]},(_,s)=>`<div class="setrow"><label>Set ${s+1}</label><input aria-label="Weight for ${it[0]} set ${s+1}" placeholder="Weight" value="${saved.weights?.[i+"-"+s]||""}" data-weight="${i}-${s}"><input aria-label="Reps completed" placeholder="Reps done" value="${saved.reps?.[i+"-"+s]||""}" data-reps="${i}-${s}"><input type="checkbox" aria-label="Set completed" data-done="${i}-${s}" ${saved.done?.[i+"-"+s]?"checked":""}></div>`).join("")}</section>`).join("");
+ $("notes").value=saved.notes||"";
+ document.querySelectorAll("[data-done]").forEach(el=>el.addEventListener("change",updateProgress));
+ updateProgress();
+}
+function collect(){
+ const data={weights:{},reps:{},done:{},notes:$("notes").value};
+ document.querySelectorAll("[data-weight]").forEach(e=>data.weights[e.dataset.weight]=e.value);
+ document.querySelectorAll("[data-reps]").forEach(e=>data.reps[e.dataset.reps]=e.value);
+ document.querySelectorAll("[data-done]").forEach(e=>data.done[e.dataset.done]=e.checked);
+ return data;
+}
+function updateProgress(){
+ const done=document.querySelectorAll("[data-done]:checked").length;
+ const total=plans[day].items.reduce((n,x)=>n+x[1],0);
+ $("progressText").textContent=`${done} of ${total} sets completed`;
+ $("progressBar").style.width=(done/total*100)+"%";
+}
+document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{day=+b.dataset.day;render()}));
+$("save").onclick=()=>{localStorage.setItem(key(),JSON.stringify(collect()));$("savedStatus").textContent="Saved on this device ✓"};
+$("clear").onclick=()=>{if(confirm("Clear all entries for this workout day?")){localStorage.removeItem(key());render();$("savedStatus").textContent="Current day cleared."}};
+function fmt(s){return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0")}
+function showSession(){$("clock").textContent=fmt(sessionSeconds)}
+$("start").onclick=()=>{if(!sessionInterval)sessionInterval=setInterval(()=>{sessionSeconds++;showSession()},1000)};
+$("pause").onclick=()=>{clearInterval(sessionInterval);sessionInterval=null};
+$("reset").onclick=()=>{clearInterval(sessionInterval);sessionInterval=null;sessionSeconds=0;showSession()};
+function showRest(){$("restClock").textContent=fmt(restSeconds)}
+document.querySelectorAll("[data-rest]").forEach(b=>b.onclick=()=>{restSeconds=+b.dataset.rest;showRest()});
+$("restStart").onclick=()=>{clearInterval(restInterval);restInterval=setInterval(()=>{if(restSeconds>0){restSeconds--;showRest()}else{clearInterval(restInterval);restInterval=null;try{navigator.vibrate?.(250)}catch(e){}}},1000)};
+$("restStop").onclick=()=>{clearInterval(restInterval);restInterval=null};
+render();showSession();showRest();
+</script>
+</body></html>
